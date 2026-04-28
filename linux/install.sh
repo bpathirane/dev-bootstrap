@@ -38,6 +38,7 @@ fi
 
 # Tool installs
 "$SCRIPT_DIR/azure-cli.sh"
+"$SCRIPT_DIR/mssql-tools.sh"
 "$SCRIPT_DIR/aws.sh"
 "$SCRIPT_DIR/k8s.sh"
 "$SCRIPT_DIR/github.sh"
