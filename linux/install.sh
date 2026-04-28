@@ -58,5 +58,6 @@ fi
 "$SCRIPT_DIR/lefthook.sh"
 "$SCRIPT_DIR/zellij.sh"
 "$SCRIPT_DIR/chezmoi.sh"
+"$SCRIPT_DIR/chromium.sh"
 
 echo "Bootstrap complete."
