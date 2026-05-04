@@ -13,12 +13,7 @@ if command_exists fzf; then
   echo "Upgrading fzf from $current to $FZF_VERSION"
 fi
 
-ARCH="$(dpkg --print-architecture)"
-case "$ARCH" in
-  amd64) ARCH="amd64" ;;
-  arm64) ARCH="arm64" ;;
-  *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
-esac
+ARCH="$(get_arch)"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

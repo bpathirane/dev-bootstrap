@@ -13,11 +13,9 @@ if command_exists lefthook; then
   echo "Upgrading lefthook from $current to $LEFTHOOK_VERSION"
 fi
 
-ARCH="$(dpkg --print-architecture)"
-case "$ARCH" in
+case "$(get_arch)" in
   amd64) ARCH="x86_64" ;;
   arm64) ARCH="arm64" ;;
-  *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
 TMP="$(mktemp -d)"

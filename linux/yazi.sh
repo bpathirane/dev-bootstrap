@@ -13,11 +13,9 @@ if command_exists yazi; then
   echo "Upgrading yazi from $current to $YAZI_VERSION"
 fi
 
-ARCH="$(dpkg --print-architecture)"
-case "$ARCH" in
+case "$(get_arch)" in
   amd64) ARCH="x86_64-unknown-linux-gnu" ;;
   arm64) ARCH="aarch64-unknown-linux-gnu" ;;
-  *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
 TMP="$(mktemp -d)"
