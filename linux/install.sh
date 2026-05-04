@@ -48,6 +48,7 @@ fi
 
 # Tool installs
 "$SCRIPT_DIR/azure-cli.sh"
+"$SCRIPT_DIR/mssql-tools.sh"
 "$SCRIPT_DIR/aws.sh"
 "$SCRIPT_DIR/k8s.sh"
 "$SCRIPT_DIR/github.sh"
@@ -74,5 +75,6 @@ fi
 "$SCRIPT_DIR/lefthook.sh"
 "$SCRIPT_DIR/zellij.sh"
 "$SCRIPT_DIR/chezmoi.sh"
+"$SCRIPT_DIR/chromium.sh"
 
 echo "Bootstrap complete."
