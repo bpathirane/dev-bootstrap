@@ -3,10 +3,16 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-echo "Starting WSL bootstrap..."
+if is_wsl; then
+  echo "Starting bootstrap (WSL)..."
+else
+  echo "Starting bootstrap (Linux)..."
+fi
 
-# Configure WSL settings first
-"$SCRIPT_DIR/wsl-config.sh"
+# WSL-only: configure wsl.conf
+if is_wsl; then
+  "$SCRIPT_DIR/wsl-config.sh"
+fi
 
 # Install apt packages
 "$SCRIPT_DIR/install-packages.sh"
@@ -33,7 +39,11 @@ fi
 ensure_directory "$HOME/source/github_personal"
 
 if ! command_exists docker; then
-  echo "WARNING: docker CLI not found. Ensure Docker Desktop WSL integration is enabled."
+  if is_wsl; then
+    echo "WARNING: docker CLI not found. Ensure Docker Desktop WSL integration is enabled."
+  else
+    echo "WARNING: docker CLI not found. Install Docker Engine for your platform."
+  fi
 fi
 
 # Tool installs
@@ -42,7 +52,12 @@ fi
 "$SCRIPT_DIR/k8s.sh"
 "$SCRIPT_DIR/github.sh"
 "$SCRIPT_DIR/ssh.sh"
-"$SCRIPT_DIR/win32yank.sh"
+# Clipboard bridge: win32yank on WSL, xclip+wl-clipboard everywhere else
+if is_wsl; then
+  "$SCRIPT_DIR/win32yank.sh"
+else
+  "$SCRIPT_DIR/clipboard.sh"
+fi
 "$SCRIPT_DIR/fzf.sh"
 "$SCRIPT_DIR/lazygit.sh"
 "$SCRIPT_DIR/yazi.sh"
@@ -50,6 +65,8 @@ fi
 "$SCRIPT_DIR/zoxide.sh"
 "$SCRIPT_DIR/lazyvim.sh"
 "$SCRIPT_DIR/bun.sh"
+"$SCRIPT_DIR/uv.sh"
+"$SCRIPT_DIR/just.sh"
 "$SCRIPT_DIR/claude.sh"
 "$SCRIPT_DIR/powershell.sh"
 "$SCRIPT_DIR/dotnet.sh"
