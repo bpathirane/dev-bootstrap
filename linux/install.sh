@@ -76,5 +76,9 @@ fi
 "$SCRIPT_DIR/zellij.sh"
 "$SCRIPT_DIR/chezmoi.sh"
 "$SCRIPT_DIR/chromium.sh"
+# WezTerm runs on the Windows/macOS host — skip inside WSL
+if ! is_wsl; then
+  "$SCRIPT_DIR/wezterm.sh"
+fi
 
 echo "Bootstrap complete."

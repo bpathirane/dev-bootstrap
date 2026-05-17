@@ -3,7 +3,7 @@ set -e
 source "$(dirname "$0")/lib.sh"
 
 if ! command_exists chezmoi; then
-  sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /usr/local/bin
+  curl -fsLS get.chezmoi.io | sudo sh -s -- -b /usr/local/bin
 fi
 
 if [ -z "${GITHUB_USER}" ]; then

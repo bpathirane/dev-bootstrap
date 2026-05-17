@@ -3,7 +3,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-if command_exists dotnet; then
+if command_exists dotnet && dotnet --version >/dev/null 2>&1; then
   echo "dotnet already installed: $(dotnet --version)"
   exit 0
 fi

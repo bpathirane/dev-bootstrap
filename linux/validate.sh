@@ -139,14 +139,21 @@ check_tool_min "yazi"      yazi        "yazi --version"                         
 check_tool_min "tldr"      tldr        "tldr --version"                            "$TLDR_VERSION"     "$SCRIPT_DIR/tldr.sh"
 check_tool "bun"       bun         "bun --version"                             ""       "$SCRIPT_DIR/bun.sh"
 check_tool "jq"        jq          "jq --version"                              ""       "$SCRIPT_DIR/install-packages.sh"
-check_tool "win32yank" win32yank.exe "echo WSL clipboard provider"             ""       "$SCRIPT_DIR/win32yank.sh"
+if is_wsl; then
+  check_tool "win32yank" win32yank.exe "echo WSL clipboard provider"           ""       "$SCRIPT_DIR/win32yank.sh"
+else
+  check_tool "xclip"       xclip       "xclip -version"                        ""       "$SCRIPT_DIR/clipboard.sh"
+  check_tool "wl-clipboard" wl-copy    "wl-copy --version"                     ""       "$SCRIPT_DIR/clipboard.sh"
+fi
 
 # Neovim: confirm it's from GitHub (not apt)
 _section "Neovim install source"
 if command_exists nvim; then
   nvim_path="$(which nvim)"
   nvim_ver="$(nvim --version | head -1)"
-  if [ "$nvim_path" = "/usr/local/bin/nvim" ] && [ -f /opt/nvim-linux-x86_64/bin/nvim ]; then
+  nvim_arch="$(get_arch)"
+  nvim_opt_dir="/opt/nvim-linux-${nvim_arch}"
+  if [ "$nvim_path" = "/usr/local/bin/nvim" ] && [ -f "${nvim_opt_dir}/bin/nvim" ]; then
     _pass "nvim from GitHub release at $nvim_path ($nvim_ver)"
   elif dpkg -s neovim >/dev/null 2>&1; then
     _fail_fixable "nvim is from apt package — run lazyvim.sh to upgrade ($nvim_ver)" "$SCRIPT_DIR/lazyvim.sh"
@@ -184,6 +191,7 @@ if command_exists zsh; then
 fi
 
 # ── 4. WSL integration ────────────────────────────────────────────────────────
+if is_wsl; then
 _section "WSL integration"
 
 # /mnt/c mounted
@@ -226,7 +234,9 @@ else
   _fail_fixable "wslview not found (install wslu)" "$SCRIPT_DIR/install-packages.sh"
 fi
 
-# systemd
+fi  # is_wsl
+
+# systemd (relevant on both WSL with systemd enabled and baremetal)
 if [ "$(ps -p 1 -o comm=)" = "systemd" ]; then
   _pass "systemd is running as PID 1"
 else
@@ -303,6 +313,7 @@ else
 fi
 
 # ── 6. wslview browser test ───────────────────────────────────────────────────
+if is_wsl; then
 _section "wslview browser test"
 
 if ! command_exists wslview || ! [ -f /mnt/c/Windows/System32/reg.exe ]; then
@@ -385,6 +396,8 @@ PYEOF
     _fail "wslview: no callback received within 20s (browser may not have opened, or localhost not reachable from Windows)"
   fi
 fi
+
+fi  # is_wsl
 
 # ── Summary ──────────────────────────────────────────────────────────────────
 echo -e "\n${BOLD}────────────────────────────────────────${RESET}"
