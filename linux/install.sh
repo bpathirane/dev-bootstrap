@@ -67,6 +67,7 @@ fi
 "$SCRIPT_DIR/lazyvim.sh"
 "$SCRIPT_DIR/bun.sh"
 "$SCRIPT_DIR/uv.sh"
+"$SCRIPT_DIR/ruff.sh"
 "$SCRIPT_DIR/just.sh"
 "$SCRIPT_DIR/claude.sh"
 "$SCRIPT_DIR/powershell.sh"
@@ -76,9 +77,10 @@ fi
 "$SCRIPT_DIR/zellij.sh"
 "$SCRIPT_DIR/chezmoi.sh"
 "$SCRIPT_DIR/chromium.sh"
-# WezTerm runs on the Windows/macOS host — skip inside WSL
+# WezTerm and fonts run on the desktop host — skip inside WSL
 if ! is_wsl; then
   "$SCRIPT_DIR/wezterm.sh"
+  "$SCRIPT_DIR/fonts.sh"
 fi
 
 echo "Bootstrap complete."
