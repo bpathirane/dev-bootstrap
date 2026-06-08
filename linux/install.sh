@@ -76,6 +76,7 @@ fi
 "$SCRIPT_DIR/lefthook.sh"
 "$SCRIPT_DIR/zellij.sh"
 "$SCRIPT_DIR/chezmoi.sh"
+"$SCRIPT_DIR/gpg.sh"
 "$SCRIPT_DIR/chromium.sh"
 # WezTerm and fonts run on the desktop host — skip inside WSL
 if ! is_wsl; then
