@@ -2,7 +2,7 @@
 set -e
 source "$(dirname "$0")/lib.sh"
 
-YAZI_VERSION="26.1.22"
+YAZI_VERSION="26.5.6"
 
 if command_exists yazi; then
   current="$(yazi --version 2>/dev/null | grep -oP '\d+\.\d+\.\d+' | head -1)"
