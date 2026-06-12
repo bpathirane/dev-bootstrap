@@ -13,9 +13,18 @@ if command_exists yazi; then
   echo "Upgrading yazi from $current to $YAZI_VERSION"
 fi
 
+# Use musl builds on glibc < 2.39 (e.g. Ubuntu 22.04) to avoid version mismatch
+GLIBC_VERSION="$(ldd --version 2>/dev/null | awk 'NR==1{print $NF}')"
+GLIBC_MINOR="$(echo "$GLIBC_VERSION" | cut -d. -f2)"
+if [ "${GLIBC_MINOR:-0}" -lt 39 ]; then
+  LIBC="musl"
+else
+  LIBC="gnu"
+fi
+
 case "$(get_arch)" in
-  amd64) ARCH="x86_64-unknown-linux-gnu" ;;
-  arm64) ARCH="aarch64-unknown-linux-gnu" ;;
+  amd64) ARCH="x86_64-unknown-linux-${LIBC}" ;;
+  arm64) ARCH="aarch64-unknown-linux-${LIBC}" ;;
 esac
 
 TMP="$(mktemp -d)"
