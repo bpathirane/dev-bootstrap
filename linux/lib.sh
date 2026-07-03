@@ -26,6 +26,17 @@ ensure_directory() {
   mkdir -p "$1"
 }
 
+brew_install_if_missing() {
+  if ! command_exists brew; then
+    return 1
+  fi
+  local formula="$1"
+  if brew list --formula | grep -qx "$formula" 2>/dev/null; then
+    return 0
+  fi
+  brew install "$formula"
+}
+
 apt_update_if_stale() {
   local stamp="/var/lib/apt/periodic/update-success-stamp"
   local max_age=3600  # 1 hour in seconds
