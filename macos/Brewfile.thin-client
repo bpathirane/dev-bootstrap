@@ -1,0 +1,8 @@
+# Brewfile for thin-client profile (macOS)
+brew "wez/wezterm/wezterm"
+brew "git"
+brew "gh"
+brew "chezmoi"
+brew "jq"
+brew "yq"
+brew "tmux"

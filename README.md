@@ -1,6 +1,34 @@
 # WSL Bootstrap
 
-Reproducible Ubuntu WSL setup for development.
+Reproducible Ubuntu bootstrap for WSL, VM, and thin-client workflows.
+
+## Profiles
+
+- `vm`: full Ubuntu VM developer workstation
+- `wsl`: Windows WSL developer workstation
+- `desktop`: Linux GUI workstation
+- `thin-client`: lightweight host tooling for remote devbox access
+- `minimal`: minimal base dependencies only
+
+## Quick Start (Linux)
+
+Run:
+
+```bash
+./bootstrap.sh --profile vm
+```
+
+For WSL:
+
+```bash
+./bootstrap.sh --profile wsl
+```
+
+For thin-client on macOS:
+
+```bash
+./bootstrap.sh --profile thin-client
+```
 
 ## Quick Start (Windows PowerShell)
 

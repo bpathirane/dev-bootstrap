@@ -3,8 +3,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-if is_wsl; then
-  exec "$SCRIPT_DIR/install-wsl.sh"
-else
-  exec "$SCRIPT_DIR/install-vm.sh"
-fi
+echo "Running identity setup..."
+
+"$SCRIPT_DIR/ssh.sh" || true
+"$SCRIPT_DIR/gpg.sh" || true
+
+echo "Identity setup complete."
