@@ -1,343 +1,100 @@
-# WSL Bootstrap
+# dev-bootstrap
 
-Reproducible Ubuntu bootstrap for WSL, VM, and thin-client workflows.
+Reproducible developer environment bootstrap for Ubuntu VMs, WSL, Linux desktops, and thin clients.
 
 ## Profiles
 
-- `vm`: full Ubuntu VM developer workstation
-- `wsl`: Windows WSL developer workstation
-- `desktop`: Linux GUI workstation
-- `thin-client`: lightweight host tooling for remote devbox access
-- `minimal`: minimal base dependencies only
+| Profile | Platform | Description |
+|---|---|---|
+| `vm` | Ubuntu VM / bare metal | Full developer workstation (headless) |
+| `wsl` | Windows WSL2 | Developer workstation inside WSL |
+| `desktop` | Linux GUI | Full workstation with desktop apps |
+| `thin-client` | macOS / Linux | Minimal host tools for remote devbox access |
+| `minimal` | Any Linux | Base dependencies only |
 
-## Quick Start (Linux)
+## Quick Start
 
-Run:
-
-```bash
-./bootstrap.sh --profile vm
-```
-
-For WSL:
+### Linux / WSL
 
 ```bash
-./bootstrap.sh --profile wsl
+curl -fsSL https://raw.githubusercontent.com/bpathirane/dev-bootstrap/main/bootstrap.sh | bash --profile vm
 ```
 
-For thin-client on macOS:
+Or clone and run directly:
+
+```bash
+git clone https://github.com/bpathirane/dev-bootstrap.git ~/source/github_personal/dev-bootstrap
+cd ~/source/github_personal/dev-bootstrap
+./bootstrap.sh --profile vm       # Ubuntu VM
+./bootstrap.sh --profile wsl      # WSL instance
+./bootstrap.sh --profile desktop  # Linux desktop
+./bootstrap.sh --profile minimal  # Minimal base only
+```
+
+Without `--profile`, the script auto-detects WSL vs plain Linux and picks `wsl` or `vm` accordingly.
+
+### macOS (thin client)
 
 ```bash
 ./bootstrap.sh --profile thin-client
 ```
 
-## Quick Start (Windows PowerShell)
+Installs WezTerm, VS Code, chezmoi, git, gh, and SSH — lightweight host tools for connecting to a remote devbox. Does not install runtimes, Docker, or Kubernetes.
 
-Run:
-
-```powershell
-$repo = "bpathirane"
-$url = "https://raw.githubusercontent.com/$repo/wsl-bootstrap/main/setup-wsl.ps1"
-$temp = "$env:TEMP\setup-wsl.ps1"
-
-Invoke-WebRequest $url -OutFile $temp
-powershell -ExecutionPolicy Bypass -File $temp
-```
-
-This creates a WSL instance named `Ubuntu-Dev` (default).
-
----
-
-## Custom Instance Name
-
-To avoid conflicts with existing WSL instances, specify a custom name:
+### Windows (new WSL instance)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File $temp -DistroName "MyDevEnv"
+$url = "https://raw.githubusercontent.com/bpathirane/dev-bootstrap/main/setup-wsl.ps1"
+Invoke-WebRequest $url -OutFile "$env:TEMP\setup-wsl.ps1"
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\setup-wsl.ps1"
 ```
 
-You can have multiple instances with different names:
+Creates a WSL instance named `Ubuntu-Dev` and runs the `wsl` profile inside it. See [WSL setup](#wsl-setup-windows) for options.
 
-```powershell
-# Work environment
-powershell -ExecutionPolicy Bypass -File $temp -DistroName "Work-Dev"
+## What Gets Installed
 
-# Personal projects
-powershell -ExecutionPolicy Bypass -File $temp -DistroName "Personal-Dev"
-```
+All Linux profiles share a common base (zsh, starship, fzf, lazygit, yazi, zoxide, LazyVim, GitHub CLI, SSH, chezmoi). Profile-specific additions:
 
----
+- **vm / wsl / desktop**: AWS CLI, Azure CLI, kubectl/k9s, .NET SDK, Bun, uv, Claude CLI, Zellij, WezTerm (desktop/WSL only)
+- **thin-client**: Homebrew, WezTerm, VS Code, chezmoi, git, gh, ssh
+- **minimal**: Core apt packages and shell only
 
-## VHD Customization
+All scripts are idempotent — safe to rerun.
 
-### Custom VHD Location
+## Validation
 
-Store the VHD on a different drive (useful for SSDs or drives with more space):
-
-```powershell
-# Store on D: drive
-powershell -ExecutionPolicy Bypass -File $temp `
-  -DistroName "Ubuntu-Dev" `
-  -VhdPath "D:\WSL\Ubuntu-Dev"
-
-# Store on external drive
-powershell -ExecutionPolicy Bypass -File $temp `
-  -DistroName "Work-Dev" `
-  -VhdPath "E:\Development\WSL\Work-Dev"
-```
-
-**Default location:** `%LOCALAPPDATA%\WSL\<DistroName>` (typically `C:\Users\<username>\AppData\Local\WSL\`)
-
-### Custom VHD Size
-
-Set maximum VHD size (WSL VHDs grow dynamically up to this limit):
-
-```powershell
-# 512 GB max size
-powershell -ExecutionPolicy Bypass -File $temp `
-  -DistroName "Ubuntu-Dev" `
-  -VhdSizeGB 512
-
-# Large development environment
-powershell -ExecutionPolicy Bypass -File $temp `
-  -DistroName "BigData-Dev" `
-  -VhdPath "D:\WSL\BigData" `
-  -VhdSizeGB 1024
-```
-
-**Default size:** 256 GB
-
-### Combined Example
-
-```powershell
-# Custom name, location, and size
-powershell -ExecutionPolicy Bypass -File $temp `
-  -DistroName "Enterprise-Dev" `
-  -VhdPath "D:\WSL\Enterprise-Dev" `
-  -VhdSizeGB 512
-```
-
----
-
-## WSL Configuration
-
-By default, this script creates an isolated WSL environment:
-- **Windows PATH disabled** - Prevents Windows executables from appearing in WSL `$PATH`
-- **Auto-mount disabled** - Windows drives (C:, D:, etc.) are not automatically mounted
-
-### Enable Windows PATH
-
-To include Windows executables in WSL PATH:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File $temp -DisableWindowsPath $false
-```
-
-### Enable Windows Drive Auto-Mount
-
-To automatically mount Windows drives at `/mnt/c`, `/mnt/d`, etc.:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File $temp -DisableAutoMount $false
-```
-
-### Enable Both
-
-For full Windows integration:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File $temp `
-  -DisableWindowsPath $false `
-  -DisableAutoMount $false
-```
-
-**Why disable by default?**
-- **Cleaner PATH**: No Windows executables cluttering your Linux environment
-- **Faster startup**: Reduces WSL initialization time
-- **Better isolation**: True Linux development environment
-- **Fewer conflicts**: Prevents accidental execution of Windows versions of tools
-
----
-
-## Rebuild Mode
-
-Destroys and recreates the instance (⚠️ **WARNING: deletes all data**):
-
-```powershell
-powershell -ExecutionPolicy Bypass -File $temp -Rebuild
-
-# Or with custom name
-powershell -ExecutionPolicy Bypass -File $temp -DistroName "MyDevEnv" -Rebuild
-```
-
----
-
-## Features
-
-- Installs zsh, tmux, starship
-- AWS CLI v2
-- kubectl, kubectx, k9s
-- GitHub CLI
-- SSH key generation
-- Chezmoi bootstrap
-- Idempotent
-- Safe to rerun
-
----
-
-## Docker Desktop
-
-Install separately:
-https://www.docker.com/products/docker-desktop/
-
-Enable WSL integration.
-
----
-
-## VHD Management
-
-Use the included `manage-vhd.ps1` script for common VHD operations:
-
-### Check VHD Info & Disk Usage
-
-```powershell
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Info
-```
-
-Shows:
-- VHD file location and size
-- Disk usage inside WSL
-- Creation/modification dates
-
-### Compact VHD (Reclaim Space)
-
-WSL VHDs don't automatically shrink when you delete files. Compact to reclaim space:
-
-```powershell
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Compact
-```
-
-This is useful after:
-- Deleting large files or Docker images
-- Running `apt autoremove` or clearing caches
-- Uninstalling applications
-
-### Resize VHD
-
-Expand the maximum VHD size:
-
-```powershell
-# Increase to 512 GB
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Resize -NewSizeGB 512
-
-# Increase to 1 TB
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Resize -NewSizeGB 1024
-```
-
-### Move VHD to Different Location
-
-Move an existing instance to a different drive:
-
-```powershell
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Move -NewPath "D:\WSL\Ubuntu-Dev"
-```
-
-**Manual method:**
-
-```powershell
-# 1. Export the distro
-wsl --export Ubuntu-Dev D:\temp\ubuntu-dev.tar
-
-# 2. Unregister the old one
-wsl --unregister Ubuntu-Dev
-
-# 3. Import to new location
-wsl --import Ubuntu-Dev D:\WSL\Ubuntu-Dev D:\temp\ubuntu-dev.tar
-
-# 4. Clean up
-Remove-Item D:\temp\ubuntu-dev.tar
-```
-
----
-
-## Modify WSL Configuration After Installation
-
-To change WSL settings on an existing instance, edit `/etc/wsl.conf` inside WSL:
+After setup, verify the installation:
 
 ```bash
-# Inside WSL
-sudo nano /etc/wsl.conf
+./linux/validate.sh --profile vm
+./linux/validate.sh --profile wsl
+./linux/validate.sh --profile thin-client
 ```
 
-**Enable/Disable Windows PATH:**
-```ini
-[interop]
-enabled = true
-appendWindowsPath = false  # Change to true to enable
+## Post-Install
+
+```bash
+# Apply dotfiles
+./linux/install-dotfiles.sh
+
+# Set up SSH/GPG identity
+./linux/install-identity.sh
+
+# Add a corporate CA certificate
+./linux/install-ca-cert.sh path/to/cert.crt
 ```
 
-**Enable/Disable Auto-Mount:**
-```ini
-[automount]
-enabled = false  # Change to true to enable
-root = /mnt/
-options = "metadata,umask=22,fmask=11"
-```
+## Profile Docs
 
-After editing, restart WSL:
-```powershell
-wsl --shutdown
-wsl -d Ubuntu-Dev
-```
+- [Ubuntu VM](docs/ubuntu-vm.md)
+- [Thin Client](docs/thin-client.md)
 
 ---
 
-## Full Reset
+## WSL Setup (Windows)
 
-Remove a WSL instance completely:
+### Custom instance
 
-```powershell
-# Default instance
-wsl --unregister Ubuntu-Dev
-
-# Or your custom instance
-wsl --unregister MyDevEnv
-```
-
-List all WSL instances:
-
-```powershell
-wsl --list --verbose
-```
-
----
-
-## Quick Reference
-
-### Common Commands
-
-```powershell
-# List all WSL instances
-wsl --list --verbose
-
-# Start a specific instance
-wsl -d Ubuntu-Dev
-
-# Shutdown all WSL instances
-wsl --shutdown
-
-# Set default instance
-wsl --set-default Ubuntu-Dev
-
-# Check WSL version
-wsl --version
-
-# Update WSL
-wsl --update
-```
-
-### Example Workflows
-
-**Create isolated development environment on D: drive:**
 ```powershell
 powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 `
   -DistroName "Dev" `
@@ -345,43 +102,33 @@ powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 `
   -VhdSizeGB 512
 ```
 
-**Create environment with Windows integration:**
+Parameters:
+
+| Parameter | Default | Description |
+|---|---|---|
+| `-DistroName` | `Ubuntu-Dev` | WSL instance name |
+| `-VhdPath` | `%LOCALAPPDATA%\WSL\<name>` | VHD file location |
+| `-VhdSizeGB` | `256` | Maximum VHD size |
+| `-DisableWindowsPath` | `$true` | Exclude Windows PATH from WSL |
+| `-DisableAutoMount` | `$true` | Don't auto-mount Windows drives |
+| `-Rebuild` | — | Destroy and recreate the instance |
+| `-GitHubUsername` | — | Used for chezmoi dotfiles init |
+
+### VHD management
+
 ```powershell
-powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 `
-  -DistroName "Integrated-Dev" `
-  -DisableWindowsPath $false `
-  -DisableAutoMount $false
+.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Info     # disk usage
+.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Compact  # reclaim space
+.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Resize -NewSizeGB 512
+.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Move -NewPath "D:\WSL\Ubuntu-Dev"
 ```
 
-**Create multiple project-specific environments:**
+### Common WSL commands
+
 ```powershell
-# Frontend development (isolated)
-powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 `
-  -DistroName "Frontend-Dev" `
-  -VhdPath "D:\WSL\Frontend"
-
-# Backend development (with Windows tools access)
-powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 `
-  -DistroName "Backend-Dev" `
-  -VhdPath "D:\WSL\Backend" `
-  -DisableWindowsPath $false
-
-# Machine learning (large VHD, isolated)
-powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 `
-  -DistroName "ML-Dev" `
-  -VhdPath "E:\WSL\ML" `
-  -VhdSizeGB 1024
-```
-
-**Regular maintenance:**
-```powershell
-# Check disk usage
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Info
-
-# Compact VHD monthly
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Compact
-
-# Update WSL
+wsl --list --verbose        # list instances
+wsl -d Ubuntu-Dev           # open instance
+wsl --shutdown              # stop all instances
+wsl --set-default Ubuntu-Dev
 wsl --update
-wsl --shutdown
 ```
