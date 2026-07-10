@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
@@ -10,14 +10,25 @@ fi
 
 echo "Installing mssql-tools18..."
 
-# Always refresh the GPG key (guards against stale/corrupt keyring from prior runs)
+# Always refresh the GPG key
 curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
   | sudo gpg --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 
-if [ ! -f /etc/apt/sources.list.d/mssql-release.list ]; then
-  curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" \
-    | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+UBUNTU_VERSION="$(lsb_release -rs)"
+
+# Fall back to 24.04 packages if Microsoft hasn't published for this distro yet
+MSFT_UBUNTU_VERSION="$UBUNTU_VERSION"
+if ! curl -fsSL --head "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" \
+    | grep -q "^HTTP/.*200"; then
+  echo "NOTE: No Microsoft packages for Ubuntu ${UBUNTU_VERSION}, falling back to 24.04"
+  MSFT_UBUNTU_VERSION="24.04"
 fi
+
+# Always rewrite the source list so it reflects the correct (possibly fallback) version
+sudo rm -f /etc/apt/sources.list.d/mssql-release.list
+curl -fsSL "https://packages.microsoft.com/config/ubuntu/${MSFT_UBUNTU_VERSION}/prod.list" \
+  | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+
 sudo apt update
 sudo ACCEPT_EULA=Y apt install -y mssql-tools18 unixodbc-dev
 
