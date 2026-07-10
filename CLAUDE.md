@@ -4,97 +4,105 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Does
 
-Provisions a full developer environment on Ubuntu VMs, WSL2 (Windows), Linux desktops, macOS thin clients, and bare metal Linux. A single entry point detects the platform and routes to the appropriate profile installer.
+Provisions a full developer environment on Ubuntu VMs, WSL2, Linux desktops, macOS thin clients, and bare metal Linux. A single entry point detects the platform and routes to the appropriate profile installer.
 
-## Profiles
+## Running and Testing
 
-- `vm` — Full Ubuntu VM / bare metal developer workstation (headless)
-- `wsl` — Developer workstation inside WSL2
-- `desktop` — Linux GUI workstation
-- `thin-client` — Minimal host-side tools for connecting to a remote devbox (macOS or Linux)
-- `minimal` — Base apt packages and shell only
-
-## Entry Points
-
-- **`bootstrap.sh`** — Universal entry point. Detects OS, clones the repo if absent, then routes to the profile installer. Pass `--profile <name>` to select a profile; without it, auto-detects WSL vs plain Linux. One-liner: `curl -fsSL https://raw.githubusercontent.com/bpathirane/dev-bootstrap/main/bootstrap.sh | bash --profile vm`
-- **`setup-wsl.ps1`** — Windows/WSL entry point. Creates a WSL instance and runs the `wsl` profile inside it. Params: `-DistroName`, `-VhdPath`, `-VhdSizeGB`, `-DisableWindowsPath`, `-DisableAutoMount`, `-Rebuild`, `-GitHubUsername`.
-- **`linux/install.sh`** — Thin redirector: detects WSL vs plain Linux and execs `install-wsl.sh` or `install-vm.sh`.
-- **`linux/install-vm.sh`** — VM profile orchestrator. Installs Homebrew, then dev tools via brew (neovim, lazygit, yazi, fzf, gh, kubectl, k9s, starship, uv, etc.), then runs optional runtime scripts: `aws.sh`, `azure-cli.sh`, `k8s.sh`, `sops.sh`, `uv.sh`, `bun.sh`, `dotnet.sh`.
-- **`linux/install-wsl.sh`** — WSL profile orchestrator. Runs `wsl-config.sh`, `install-packages.sh`, `win32yank.sh`, then the same runtime scripts as vm.
-- **`linux/install-thin-client.sh`** — Linux thin-client profile. Installs git, curl, gh, chezmoi via apt.
-- **`linux/install-desktop.sh`** — Desktop profile (GUI workstation).
-- **`linux/install-minimal.sh`** — Minimal profile. Base packages and shell only.
-- **`linux/install-packages.sh`** — Apt package installs. Called by WSL installer; can be run standalone via `/dev-install`.
-- **`macos/install-thin-client.sh`** — macOS thin-client profile. Installs Homebrew, then packages from `macos/Brewfile.thin-client`.
-- **`manage-vhd.ps1`** — Standalone VHD management utility. Actions: `Info`, `Compact`, `Resize`, `Move`.
-
-## Linux Script Architecture
-
-All `linux/` scripts source `lib.sh` for shared helpers:
-- `command_exists <cmd>` — checks if a binary is on PATH
-- `is_wsl` — returns true when running inside WSL
-- `get_arch` — returns `amd64` or `arm64` based on `uname -m` (replaces `dpkg --print-architecture`)
-- `apt_install_if_missing <pkg>` — skips install if already installed (idempotency)
-- `ensure_directory <path>` — mkdir -p wrapper
-
-Each tool script uses `command_exists` guards to make all installs idempotent — safe to rerun without re-installing.
-
-## Platform-Conditional Scripts
-
-- `wsl-config.sh` — WSL only (sets `/etc/wsl.conf`)
-- `win32yank.sh` — WSL only (Windows clipboard bridge for Neovim)
-- `clipboard.sh` — Non-WSL Linux only (installs `xclip` + `wl-clipboard` for Neovim)
-- `wezterm.sh` — Non-WSL Linux only (WezTerm runs on the Windows/macOS host; skipped inside WSL)
-- `macos/install-thin-client.sh` — macOS only; uses Homebrew and `macos/Brewfile.thin-client`
-- `macos/validate-thin-client.sh` — macOS thin-client validation
-
-## Environment Variables (PowerShell → Linux)
-
-`setup-wsl.ps1` passes configuration to `install.sh` via env vars:
-- `DISABLE_WINDOWS_PATH` — read by `wsl-config.sh` to set `appendWindowsPath` in `/etc/wsl.conf`
-- `DISABLE_AUTO_MOUNT` — read by `wsl-config.sh` to set automount in `/etc/wsl.conf`
-- `GITHUB_USER` — read by `chezmoi.sh` to init dotfiles from `git@github.com:<user>/dotfiles.git`
-
-## Default WSL Behavior
-
-- Instance name: `Ubuntu-Dev`
-- Base distro: `Ubuntu-24.04`
-- VHD location: `%LOCALAPPDATA%\WSL\<DistroName>`
-- VHD max size: 256 GB
-- Windows PATH injection: **disabled** (isolated environment)
-- Windows drive auto-mount: **disabled**
-- systemd: enabled in `/etc/wsl.conf`
-
-## Running the Scripts
+All scripts are idempotent — safe to rerun. There are no automated tests; validation is done by running the validate scripts on a real machine.
 
 ```bash
-# Fresh machine (one-liner, auto-detects platform)
-curl -fsSL https://raw.githubusercontent.com/bpathirane/dev-bootstrap/main/bootstrap.sh | bash --profile vm
+# Run a profile install
+bootstrap install --profile vm
+bootstrap install --profile wsl
 
-# Re-run bootstrap manually (all scripts are idempotent)
-cd ~/source/github_personal/dev-bootstrap
-./bootstrap.sh --profile vm        # or wsl, desktop, minimal, thin-client
+# Validate an installed profile
+bootstrap validate --profile vm
+bootstrap validate --profile wsl
 
-# Validate after install
-./linux/validate.sh --profile vm
+# Install extras
+bootstrap extras dotfiles
+bootstrap extras nts
+bootstrap extras --list
+
+# Check installed state vs repo
+bootstrap status
+bootstrap pull
 ```
 
-```powershell
-# Basic WSL setup (from PowerShell as Administrator)
-powershell -ExecutionPolicy Bypass -File setup-wsl.ps1
+The `bootstrap` command is a symlink to `bootstrap.sh` registered at `~/.local/bin/bootstrap` on first run. During development, invoke directly:
 
-# Custom instance on D: drive
-powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 -DistroName "Dev" -VhdPath "D:\WSL\Dev" -VhdSizeGB 512
-
-# Rebuild (destroys all data in instance)
-powershell -ExecutionPolicy Bypass -File setup-wsl.ps1 -DistroName "Ubuntu-Dev" -Rebuild
-
-# VHD management
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Compact
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Resize -NewSizeGB 512
-.\manage-vhd.ps1 -DistroName "Ubuntu-Dev" -Action Move -NewPath "D:\WSL\Ubuntu-Dev"
+```bash
+./bootstrap.sh install --profile vm
 ```
 
-## Custom WSL Instance Creation
+To test a single tool script in isolation:
 
-`setup-wsl.ps1` queries `wsl --list --online` at runtime to discover directly installable distros. If `$DistroName` matches a known online distro, it installs it with `wsl --install -d` directly. Otherwise it treats the name as a custom instance: it installs `$BaseDistro` if not already present locally, exports it as a `.tar`, then imports it under `$DistroName`. This is the mechanism that enables multiple named instances from any available base distro.
+```bash
+./linux/sops.sh
+./linux/nts.sh
+NTS_SERVER=time.cloudflare.com ./linux/nts.sh
+```
+
+The verbose validate script (`linux/validate.sh`) has `--fix` and `--interactive` modes:
+
+```bash
+./linux/validate.sh --fix
+./linux/validate.sh --interactive
+```
+
+## Architecture
+
+### Entry point and dispatch
+
+`bootstrap.sh` is the only script users need to know. It:
+1. Ensures git is present, then clones/pulls the repo to `~/source/github_personal/dev-bootstrap`
+2. Self-registers as `~/.local/bin/bootstrap`
+3. Sources `linux/lib-state.sh` for state management
+4. Dispatches to `linux/install-<profile>.sh` or `linux/validate-<profile>.sh` based on subcommand and profile
+
+### Shared libraries
+
+- **`linux/lib.sh`** — low-level helpers sourced by all `linux/` scripts: `command_exists`, `is_wsl`, `get_arch`, `apt_install_if_missing`, `brew_install_if_missing`, `apt_update_if_stale`
+- **`linux/lib-state.sh`** — state management sourced only by `bootstrap.sh`: reads version via `git describe --tags --always`, writes `~/.bootstrap/settings.json`, manages per-run log files in `~/.bootstrap/logs/`
+
+### Profile installers
+
+Each profile is self-contained:
+- `linux/install-vm.sh` — installs base apt packages, then Homebrew, then a fixed `BREW_TOOLS` array, then optional runtime scripts (`aws.sh`, `azure-cli.sh`, `k8s.sh`, etc.)
+- `linux/install-wsl.sh` — runs `wsl-config.sh`, `install-packages.sh`, `win32yank.sh`, then the same runtime scripts
+- `linux/install-desktop.sh`, `install-minimal.sh`, `install-thin-client.sh` — profile variants
+- `macos/install-thin-client.sh` — macOS thin-client via Homebrew + `macos/Brewfile.thin-client`
+
+### Tool scripts
+
+`linux/*.sh` tool scripts (e.g. `sops.sh`, `nts.sh`, `bun.sh`) are:
+- Standalone — each sources `lib.sh` and runs independently
+- Idempotent — guarded by `command_exists` or version checks before installing
+- Called by profile installers with `|| true` so one failure doesn't abort the whole install
+
+### Extras system
+
+Extras are optional post-install steps registered in the `EXTRAS` associative array in `bootstrap.sh`. Adding a new extra is one line in that map. Each extra is a `linux/*.sh` script that runs via `run_with_log`, with its name and version recorded to `settings.json` on success.
+
+### State tracking
+
+`~/.bootstrap/settings.json` tracks:
+- `profile` and `version` (git describe output) of the last successful install
+- `extras[]` — each extra with its version and install timestamp
+- `runs[]` — last 50 runs with command, version, exit code, and log path
+
+Version is always `git describe --tags --always` — no manual VERSION file to bump. Tag a commit to attach a human-readable label (`git tag v1.0.0`).
+
+### Validators
+
+- `linux/validate-vm.sh` — checks required tools, optional tools, and time sync (chrony drift or timedatectl NTPSynchronized)
+- `linux/validate.sh` — comprehensive validator with fix/interactive modes; checks tool versions, Neovim install source, Kubernetes tools, shell, WSL integration, and git/SSH authentication
+- `linux/validate-wsl.sh`, `linux/validate-thin-client.sh` — profile-specific subsets
+
+## Key Conventions
+
+- All `linux/` scripts must `source "$(dirname "$0")/lib.sh"` at the top
+- Use `brew_install_if_missing` for fast-moving dev tools; use `apt_install_if_missing` for base OS packages only
+- WSL-only code must be guarded with `is_wsl`; never call `wsl-config.sh` or `win32yank.sh` outside WSL
+- Platform-conditional scripts: `clipboard.sh` and `wezterm.sh` are non-WSL Linux only; `win32yank.sh` and `wsl-config.sh` are WSL only
+- `GITHUB_USER` env var is read by `chezmoi.sh` to init dotfiles from `git@github.com:<user>/dotfiles.git`
