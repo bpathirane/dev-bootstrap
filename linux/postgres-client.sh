@@ -16,7 +16,7 @@ DISTRO="$(lsb_release -cs)"
 # Always refresh the GPG key (guards against stale/corrupt keyring from prior runs)
 echo "Adding PostgreSQL apt repository (pgdg)..."
 curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-  | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
+  | sudo gpg --yes --dearmor -o /usr/share/keyrings/postgresql.gpg
 
 if [ ! -f /etc/apt/sources.list.d/pgdg.list ]; then
   echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt ${DISTRO}-pgdg main" \

@@ -13,7 +13,7 @@ else
 
   # Always refresh GPG key
   curl -fsSL "https://download.docker.com/linux/${DISTRO}/gpg" \
-    | sudo gpg --dearmor -o /usr/share/keyrings/docker.gpg
+    | sudo gpg --yes --dearmor -o /usr/share/keyrings/docker.gpg
 
   if [ ! -f /etc/apt/sources.list.d/docker.list ]; then
     echo "deb [arch=${ARCH} signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/${DISTRO} ${CODENAME} stable" \

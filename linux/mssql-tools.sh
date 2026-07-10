@@ -12,7 +12,7 @@ echo "Installing mssql-tools18..."
 
 # Always refresh the GPG key (guards against stale/corrupt keyring from prior runs)
 curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
-  | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+  | sudo gpg --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 
 if [ ! -f /etc/apt/sources.list.d/mssql-release.list ]; then
   curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" \
