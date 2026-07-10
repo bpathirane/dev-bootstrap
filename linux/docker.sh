@@ -15,12 +15,16 @@ else
   curl -fsSL "https://download.docker.com/linux/${DISTRO}/gpg" \
     | sudo gpg --yes --dearmor -o /usr/share/keyrings/docker.gpg
 
-  # Remove any legacy unsigned Microsoft repo entries that break apt update
+  # Remove all pre-existing Microsoft repo files (both .list and .sources formats)
+  # to prevent unsigned entries from breaking apt update
   for f in /etc/apt/sources.list.d/azure-cli.list \
+            /etc/apt/sources.list.d/azure-cli.sources \
             /etc/apt/sources.list.d/microsoft.list \
-            /etc/apt/sources.list.d/microsoft-prod.list; do
-    if [ -f "$f" ] && ! grep -q "signed-by" "$f"; then
-      echo "Removing legacy unsigned Microsoft repo: $f"
+            /etc/apt/sources.list.d/microsoft.sources \
+            /etc/apt/sources.list.d/microsoft-prod.list \
+            /etc/apt/sources.list.d/microsoft-prod.sources; do
+    if [ -f "$f" ]; then
+      echo "Removing existing Microsoft repo file: $f"
       sudo rm -f "$f"
     fi
   done
