@@ -1,29 +1,18 @@
 #!/usr/bin/env bash
 set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/lib.sh"
+source "$(dirname "$0")/lib.sh"
 
 if command_exists dotnet; then
-  echo "dotnet already installed: $(dotnet --version)"
+  echo "dotnet $(dotnet --version) already installed"
   exit 0
 fi
 
-echo "Installing .NET SDK..."
+wget https://dot.net/v1/dotnet-install.sh -O /tmp/dotnet-install.sh
+chmod +x /tmp/dotnet-install.sh
+/tmp/dotnet-install.sh --version latest
 
-# Install prerequisites
-apt_install_if_missing wget
-apt_install_if_missing apt-transport-https
-apt_install_if_missing software-properties-common
+# Add dotnet to PATH (sourced by shell profile on next login)
+echo 'export PATH=$PATH:$HOME/.dotnet' >> "$HOME/.bashrc"
+echo 'export PATH=$PATH:$HOME/.dotnet' >> "$HOME/.zshrc"
 
-# Add Microsoft package signing key and repo (shared with powershell.sh)
-SOURCE_LIST=/etc/apt/sources.list.d/microsoft.list
-if [ ! -f "$SOURCE_LIST" ]; then
-  wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb" -O /tmp/packages-microsoft-prod.deb
-  sudo dpkg -i /tmp/packages-microsoft-prod.deb
-  rm /tmp/packages-microsoft-prod.deb
-fi
-
-sudo apt update
-sudo apt install -y dotnet-sdk-8.0
-
-echo ".NET SDK installed: $(dotnet --version)"
+echo "dotnet installed"

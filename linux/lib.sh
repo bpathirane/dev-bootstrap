@@ -4,14 +4,46 @@ command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
+is_wsl() {
+  grep -qi microsoft /proc/version 2>/dev/null
+}
+
+get_arch() {
+  case "$(uname -m)" in
+    x86_64)           echo "amd64" ;;
+    aarch64 | arm64)  echo "arm64" ;;
+    *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+  esac
+}
+
 apt_install_if_missing() {
-  if ! dpkg -s "$1" >/dev/null 2>&1; then
-    sudo DEBIAN_FRONTEND=noninteractive apt install -y "$1"
+  local pkg="$1"
+  if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+    if ! sudo DEBIAN_FRONTEND=noninteractive apt install -y "$pkg" 2>&1; then
+      echo "⚠️  Warning: Failed to install apt package '$pkg'" >&2
+      return 1
+    fi
   fi
+  return 0
 }
 
 ensure_directory() {
   mkdir -p "$1"
+}
+
+brew_install_if_missing() {
+  if ! command_exists brew; then
+    return 1
+  fi
+  local formula="$1"
+  if brew list --formula | grep -qx "$formula" 2>/dev/null; then
+    return 0
+  fi
+  if ! brew install --quiet "$formula" 2>&1; then
+    echo "⚠️  Warning: Failed to install brew formula '$formula'" >&2
+    return 1
+  fi
+  return 0
 }
 
 apt_update_if_stale() {

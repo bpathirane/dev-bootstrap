@@ -8,17 +8,20 @@ if dpkg -s neovim >/dev/null 2>&1; then
   sudo apt remove -y neovim
 fi
 
+NVIM_ARCH="$(get_arch)"
+NVIM_ARCHIVE="nvim-linux-${NVIM_ARCH}.tar.gz"
+NVIM_OPT_DIR="/opt/nvim-linux-${NVIM_ARCH}"
+
 NVIM_LATEST="$(curl -fsSL https://api.github.com/repos/neovim/neovim/releases/latest | grep '"tag_name"' | cut -d'"' -f4)"
 NVIM_CURRENT="$(nvim --version 2>/dev/null | head -1 | grep -oP 'v[\d.]+')"
 
 if [ "$NVIM_CURRENT" != "$NVIM_LATEST" ]; then
   echo "Installing Neovim ${NVIM_LATEST} (current: ${NVIM_CURRENT:-none})..."
-  NVIM_ARCHIVE="nvim-linux-x86_64.tar.gz"
   TMP_DIR="$(mktemp -d)"
   curl -fsSL "https://github.com/neovim/neovim/releases/latest/download/${NVIM_ARCHIVE}" -o "${TMP_DIR}/${NVIM_ARCHIVE}"
-  sudo rm -rf /opt/nvim-linux-x86_64
+  sudo rm -rf "${NVIM_OPT_DIR}"
   sudo tar -C /opt -xzf "${TMP_DIR}/${NVIM_ARCHIVE}"
-  sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
+  sudo ln -sf "${NVIM_OPT_DIR}/bin/nvim" /usr/local/bin/nvim
   rm -rf "${TMP_DIR}"
   echo "Neovim ${NVIM_LATEST} installed."
 else

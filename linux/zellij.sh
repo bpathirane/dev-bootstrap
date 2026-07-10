@@ -13,11 +13,9 @@ if command_exists zellij; then
   echo "Upgrading zellij from $current to $ZELLIJ_VERSION"
 fi
 
-ARCH="$(dpkg --print-architecture)"
-case "$ARCH" in
+case "$(get_arch)" in
   amd64) ARCH="x86_64-unknown-linux-musl" ;;
   arm64) ARCH="aarch64-unknown-linux-musl" ;;
-  *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
 TMP="$(mktemp -d)"

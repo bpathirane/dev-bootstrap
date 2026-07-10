@@ -1,39 +1,12 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-echo "Starting WSL bootstrap..."
-
-# Configure WSL settings first
-"$SCRIPT_DIR/wsl-config.sh"
-
-# Install apt packages
-"$SCRIPT_DIR/install-packages.sh"
-
-# tmux from source (needs build-essential, libevent-dev, ncurses-dev from apt)
-"$SCRIPT_DIR/tmux.sh"
-
-# Starship prompt
-if ! command_exists starship; then
-  curl -sS https://starship.rs/install.sh | sh -s -- -y
-fi
-# Wire starship into bash login shells via profile.d.
-# Zsh init (eval "$(starship init zsh)") should live in your chezmoi-managed .zshrc.
-if command_exists starship && [ ! -f /etc/profile.d/starship.sh ]; then
-  echo 'eval "$(starship init bash)"' | sudo tee /etc/profile.d/starship.sh > /dev/null
-  sudo chmod +x /etc/profile.d/starship.sh
-fi
-
-# Set zsh as default shell
-if [ "$SHELL" != "$(which zsh)" ]; then
-  chsh -s "$(which zsh)"
-fi
-
-ensure_directory "$HOME/source/github_personal"
-
-if ! command_exists docker; then
-  echo "WARNING: docker CLI not found. Ensure Docker Desktop WSL integration is enabled."
+if is_wsl; then
+  exec "$SCRIPT_DIR/install-wsl.sh"
+else
+  exec "$SCRIPT_DIR/install-vm.sh"
 fi
 
 # Tool installs

@@ -13,7 +13,7 @@ if command_exists sops; then
   echo "Upgrading sops from $current to $SOPS_VERSION"
 fi
 
-ARCH="$(dpkg --print-architecture)"
+ARCH="$(get_arch)"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
