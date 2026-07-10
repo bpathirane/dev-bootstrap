@@ -17,9 +17,14 @@ get_arch() {
 }
 
 apt_install_if_missing() {
-  if ! dpkg -s "$1" >/dev/null 2>&1; then
-    sudo DEBIAN_FRONTEND=noninteractive apt install -y "$1"
+  local pkg="$1"
+  if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+    if ! sudo DEBIAN_FRONTEND=noninteractive apt install -y "$pkg" 2>&1; then
+      echo "⚠️  Warning: Failed to install apt package '$pkg'" >&2
+      return 1
+    fi
   fi
+  return 0
 }
 
 ensure_directory() {
@@ -34,7 +39,11 @@ brew_install_if_missing() {
   if brew list --formula | grep -qx "$formula" 2>/dev/null; then
     return 0
   fi
-  brew install --quiet "$formula"
+  if ! brew install --quiet "$formula" 2>&1; then
+    echo "⚠️  Warning: Failed to install brew formula '$formula'" >&2
+    return 1
+  fi
+  return 0
 }
 
 apt_update_if_stale() {
