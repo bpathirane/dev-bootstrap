@@ -19,7 +19,7 @@ done
 # Prefer Homebrew for fast-moving dev tools.
 "$SCRIPT_DIR/install-brew.sh" || true
 
-BREW_TOOLS=(neovim tmux lazygit yazi fzf fd ripgrep gh kubectl helm k9s zoxide starship just uv tldr sops)
+BREW_TOOLS=(neovim tmux lazygit yazi fzf fd ripgrep gh kubectl helm k9s zoxide starship just uv tldr sops fnm)
 for tool in "${BREW_TOOLS[@]}"; do
   if command_exists brew; then
     brew_install_if_missing "$tool" || true
