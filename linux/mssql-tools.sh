@@ -10,13 +10,15 @@ fi
 
 echo "Installing mssql-tools18..."
 
-# Add Microsoft GPG key and prod repo only if not already present
-if [ ! -f /etc/apt/sources.list.d/microsoft-prod.list ] && [ ! -f /etc/apt/sources.list.d/mssql-release.list ]; then
-  curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+# Always refresh the GPG key (guards against stale/corrupt keyring from prior runs)
+curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
+  | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+
+if [ ! -f /etc/apt/sources.list.d/mssql-release.list ]; then
   curl -fsSL "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" \
     | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
-  sudo apt update
 fi
+sudo apt update
 sudo ACCEPT_EULA=Y apt install -y mssql-tools18 unixodbc-dev
 
 # Add sqlcmd/bcp to PATH for all shells

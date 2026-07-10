@@ -13,14 +13,16 @@ fi
 DISTRO="$(lsb_release -cs)"
 
 # Add PGDG repo if not already present
+# Always refresh the GPG key (guards against stale/corrupt keyring from prior runs)
+echo "Adding PostgreSQL apt repository (pgdg)..."
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+  | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
+
 if [ ! -f /etc/apt/sources.list.d/pgdg.list ]; then
-  echo "Adding PostgreSQL apt repository (pgdg)..."
-  curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-    | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
   echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt ${DISTRO}-pgdg main" \
     | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
-  sudo apt update
 fi
+sudo apt update
 
 if [ -n "$PG_VERSION" ]; then
   PKG="postgresql-client-${PG_VERSION}"
