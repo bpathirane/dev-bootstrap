@@ -81,7 +81,8 @@ state_add_extra() {
 }
 
 # record_run <command_label> <log_file> <exit_code>
-# Appends a run entry. Keeps only the 50 most recent runs.
+# Appends a run entry. Pass empty string for log_file when there is no log.
+# Keeps only the 50 most recent runs.
 record_run() {
   local label="$1" log_file="$2" exit_code="$3"
   local version now
@@ -92,7 +93,8 @@ record_run() {
   jq --arg cmd "$label" --arg v "$version" --arg t "$now" \
      --arg log "$log_file" --argjson rc "$exit_code" '
     .runs = (
-      [{"at": $t, "command": $cmd, "version": $v, "exitCode": $rc, "log": $log}] + .runs
+      [{"at": $t, "command": $cmd, "version": $v, "exitCode": $rc,
+        "log": (if $log == "" then null else $log end)}] + .runs
     ) | .runs = .runs[:50]' \
     "$BOOTSTRAP_SETTINGS" > "${BOOTSTRAP_SETTINGS}.tmp" && mv "${BOOTSTRAP_SETTINGS}.tmp" "$BOOTSTRAP_SETTINGS"
 }

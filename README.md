@@ -25,6 +25,8 @@ After the first run, `bootstrap` is registered as a global command (`~/.local/bi
 ```bash
 bootstrap install --profile vm
 bootstrap validate --profile vm
+bootstrap pull          # fetch latest from GitHub
+bootstrap status        # show installed profile, version, extras, and last run
 ```
 
 Or clone and run directly:
