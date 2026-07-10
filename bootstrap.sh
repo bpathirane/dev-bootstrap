@@ -120,10 +120,10 @@ _repo_ensure() {
 _repo_pull() {
   _repo_ensure
   local before after
-  before="$(tr -d '[:space:]' < "$REPO_DIR/VERSION" 2>/dev/null || echo "unknown")"
+  before="$(git -C "$REPO_DIR" describe --tags --always 2>/dev/null || echo "unknown")"
   echo "Pulling from origin/main..."
   git -C "$REPO_DIR" pull
-  after="$(tr -d '[:space:]' < "$REPO_DIR/VERSION" 2>/dev/null || echo "unknown")"
+  after="$(git -C "$REPO_DIR" describe --tags --always 2>/dev/null || echo "unknown")"
   if [ "$before" != "$after" ]; then
     echo "Updated: $before → $after"
   else
@@ -147,9 +147,9 @@ VERSION="$(_state_version)"
 case "$SUBCOMMAND" in
 
   pull)
-    before="$(tr -d '[:space:]' < "$REPO_DIR/VERSION" 2>/dev/null || echo "unknown")"
+    before="$(git -C "$REPO_DIR" describe --tags --always 2>/dev/null || echo "unknown")"
     _repo_pull
-    after="$(tr -d '[:space:]' < "$REPO_DIR/VERSION" 2>/dev/null || echo "unknown")"
+    after="$(git -C "$REPO_DIR" describe --tags --always 2>/dev/null || echo "unknown")"
     # Record the pull in run history
     record_run "pull" "" 0
     # Advise if version changed and profile is installed
@@ -183,10 +183,10 @@ case "$SUBCOMMAND" in
       remote_sha="$(git -C "$REPO_DIR" rev-parse origin/main 2>/dev/null || true)"
       local_sha="$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)"
       if [ -n "$remote_sha" ] && [ "$remote_sha" != "$local_sha" ]; then
-        remote_version="$(git -C "$REPO_DIR" show origin/main:VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+        remote_version="$(git -C "$REPO_DIR" describe --tags --always origin/main 2>/dev/null || true)"
         if [ -n "$remote_version" ] && [ "$remote_version" != "$repo_version" ]; then
           version_line="$version_line  (GitHub: $remote_version — run: bootstrap pull)"
-        elif [ -n "$remote_sha" ]; then
+        else
           version_line="$version_line  (commits available on GitHub — run: bootstrap pull)"
         fi
       fi

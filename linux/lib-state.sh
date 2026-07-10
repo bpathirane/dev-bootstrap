@@ -9,11 +9,7 @@ BOOTSTRAP_LOGS="$BOOTSTRAP_DIR/logs"
 _state_version() {
   local repo_dir
   repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-  if [ -f "$repo_dir/VERSION" ]; then
-    tr -d '[:space:]' < "$repo_dir/VERSION"
-  else
-    echo "unknown"
-  fi
+  git -C "$repo_dir" describe --tags --always 2>/dev/null || echo "unknown"
 }
 
 _state_now() {
