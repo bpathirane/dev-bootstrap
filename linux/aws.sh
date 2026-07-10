@@ -2,9 +2,13 @@
 set -e
 source "$(dirname "$0")/lib.sh"
 
-if ! command_exists aws; then
-  curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
-  unzip -q awscliv2.zip
-  sudo ./aws/install
-  rm -rf aws awscliv2.zip
+if command_exists aws; then
+  echo "AWS CLI $(aws --version) already installed"
+  exit 0
 fi
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-$(get_arch).zip" -o "/tmp/awscliv2.zip"
+cd /tmp && unzip -q awscliv2.zip && sudo ./aws/install
+rm -rf /tmp/aws /tmp/awscliv2.zip
+
+echo "AWS CLI installed"

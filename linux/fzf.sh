@@ -2,24 +2,15 @@
 set -e
 source "$(dirname "$0")/lib.sh"
 
-FZF_VERSION="0.70.0"
-
 if command_exists fzf; then
-  current="$(fzf --version | awk '{print $1}')"
-  if [ "$current" = "$FZF_VERSION" ]; then
-    echo "fzf $FZF_VERSION already installed"
-    exit 0
-  fi
-  echo "Upgrading fzf from $current to $FZF_VERSION"
+  echo "fzf $(fzf --version) already installed"
+  exit 0
 fi
 
-ARCH="$(get_arch)"
+GIT_TAG=$(curl -s "https://api.github.com/repos/junegunn/fzf/releases/latest" | grep -o '"tag_name": "[^"]*"' | head -1 | cut -d'"' -f4)
+FZF_URL="https://github.com/junegunn/fzf/releases/download/${GIT_TAG}/fzf-${GIT_TAG}-linux_$(get_arch).tar.gz"
 
-TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
+curl -fL "$FZF_URL" | tar -xz -C /tmp
+sudo mv /tmp/fzf /usr/local/bin/
 
-curl -fsSL "https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_${ARCH}.tar.gz" -o "$TMP/fzf.tar.gz"
-tar -xzf "$TMP/fzf.tar.gz" -C "$TMP"
-sudo install -m 755 "$TMP/fzf" /usr/local/bin/fzf
-
-echo "fzf $FZF_VERSION installed"
+echo "fzf installed"
