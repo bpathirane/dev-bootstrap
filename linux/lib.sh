@@ -34,7 +34,7 @@ brew_install_if_missing() {
   if brew list --formula | grep -qx "$formula" 2>/dev/null; then
     return 0
   fi
-  brew install "$formula"
+  brew install --quiet "$formula"
 }
 
 apt_update_if_stale() {
