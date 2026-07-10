@@ -40,4 +40,5 @@ Optional follow-up steps:
   ./linux/install-dotfiles.sh
   ./linux/install-identity.sh
   ./linux/install-ai.sh
+  ./linux/nts.sh              # set up chrony + NTS for authenticated time sync
 EOF

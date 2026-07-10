@@ -17,7 +17,14 @@ Reproducible developer environment bootstrap for Ubuntu VMs, WSL, Linux desktops
 ### Linux / WSL
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bpathirane/dev-bootstrap/main/bootstrap.sh | bash --profile vm
+curl -fsSL https://raw.githubusercontent.com/bpathirane/dev-bootstrap/main/bootstrap.sh | bash -s -- install --profile vm
+```
+
+After the first run, `bootstrap` is registered as a global command (`~/.local/bin/bootstrap`). Subsequent runs from anywhere:
+
+```bash
+bootstrap install --profile vm
+bootstrap validate --profile vm
 ```
 
 Or clone and run directly:
@@ -25,18 +32,18 @@ Or clone and run directly:
 ```bash
 git clone https://github.com/bpathirane/dev-bootstrap.git ~/source/github_personal/dev-bootstrap
 cd ~/source/github_personal/dev-bootstrap
-./bootstrap.sh --profile vm       # Ubuntu VM
-./bootstrap.sh --profile wsl      # WSL instance
-./bootstrap.sh --profile desktop  # Linux desktop
-./bootstrap.sh --profile minimal  # Minimal base only
+./bootstrap.sh install --profile vm       # Ubuntu VM
+./bootstrap.sh install --profile wsl      # WSL instance
+./bootstrap.sh install --profile desktop  # Linux desktop
+./bootstrap.sh install --profile minimal  # Minimal base only
 ```
 
-Without `--profile`, the script auto-detects WSL vs plain Linux and picks `wsl` or `vm` accordingly.
+Without `--profile`, the script auto-detects WSL vs plain Linux and picks `wsl` or `vm` accordingly. The `install` subcommand is the default and can be omitted.
 
 ### macOS (thin client)
 
 ```bash
-./bootstrap.sh --profile thin-client
+./bootstrap.sh install --profile thin-client
 ```
 
 Installs WezTerm, VS Code, chezmoi, git, gh, and SSH — lightweight host tools for connecting to a remote devbox. Does not install runtimes, Docker, or Kubernetes.
@@ -66,23 +73,47 @@ All scripts are idempotent — safe to rerun.
 After setup, verify the installation:
 
 ```bash
-./linux/validate.sh --profile vm
-./linux/validate.sh --profile wsl
-./linux/validate.sh --profile thin-client
+bootstrap validate --profile vm
+bootstrap validate --profile wsl
+bootstrap validate --profile thin-client
 ```
 
 ## Post-Install
 
+After `bootstrap install`, run extras individually:
+
 ```bash
-# Apply dotfiles
-./linux/install-dotfiles.sh
-
-# Set up SSH/GPG identity
-./linux/install-identity.sh
-
-# Add a corporate CA certificate
-./linux/install-ca-cert.sh path/to/cert.crt
+bootstrap extras dotfiles   # apply chezmoi dotfiles
+bootstrap extras identity   # SSH/GPG keys
+bootstrap extras nts        # chrony + NTS time sync
+bootstrap extras ai         # Claude CLI and AI tools
+bootstrap extras --list     # show all available extras
 ```
+
+Or directly via the scripts:
+```bash
+./linux/install-ca-cert.sh path/to/cert.crt   # add a corporate CA certificate
+```
+
+## State
+
+Bootstrap tracks installed profile, version, and extras in `~/.bootstrap/settings.json`:
+
+```json
+{
+  "profile": "vm",
+  "version": "0.1.0",
+  "installedAt": "2026-07-10T12:00:00Z",
+  "extras": [
+    { "name": "dotfiles", "version": "0.1.0", "installedAt": "2026-07-10T12:10:00Z" }
+  ],
+  "runs": [
+    { "at": "2026-07-10T12:00:00Z", "command": "install-vm", "version": "0.1.0", "exitCode": 0, "log": "~/.bootstrap/logs/2026-07-10T120000Z-install-vm.log" }
+  ]
+}
+```
+
+Logs for every run are stored in `~/.bootstrap/logs/`.
 
 ## Profile Docs
 
