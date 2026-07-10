@@ -7,7 +7,7 @@ echo "Starting VM profile install..."
 
 apt_update_if_stale
 
-BASE_PKGS=(git curl wget ca-certificates build-essential unzip jq ripgrep fd-find bat zsh)
+BASE_PKGS=(git curl wget ca-certificates build-essential unzip jq ripgrep fd-find bat zsh krb5-user)
 for pkg in "${BASE_PKGS[@]}"; do
   apt_install_if_missing "$pkg"
 done

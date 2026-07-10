@@ -16,6 +16,8 @@ declare -A EXTRAS=(
   [identity]="install-identity.sh"
   [nts]="nts.sh"
   [ai]="install-ai.sh"
+  [mssql]="mssql-tools.sh"
+  [postgres-client]="postgres-client.sh"
 )
 
 _extras_list() {
