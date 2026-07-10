@@ -24,7 +24,6 @@ apt_update_if_stale
 "$SCRIPT_DIR/azure-cli.sh" || true
 "$SCRIPT_DIR/github.sh" || true
 "$SCRIPT_DIR/k8s.sh" || true
-"$SCRIPT_DIR/sops.sh" || true
 "$SCRIPT_DIR/uv.sh" || true
 "$SCRIPT_DIR/ruff.sh" || true
 "$SCRIPT_DIR/bun.sh" || true

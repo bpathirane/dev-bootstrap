@@ -15,7 +15,7 @@ done
 # Prefer Homebrew for fast-moving dev tools.
 "$SCRIPT_DIR/install-brew.sh" || true
 
-BREW_TOOLS=(neovim tmux lazygit yazi fzf fd ripgrep gh kubectl helm k9s zoxide starship just uv tldr)
+BREW_TOOLS=(neovim tmux lazygit yazi fzf fd ripgrep gh kubectl helm k9s zoxide starship just uv tldr sops)
 for tool in "${BREW_TOOLS[@]}"; do
   if command_exists brew; then
     brew_install_if_missing "$tool" || true
@@ -27,7 +27,6 @@ done
 "$SCRIPT_DIR/azure-cli.sh" || true
 "$SCRIPT_DIR/github.sh" || true
 "$SCRIPT_DIR/k8s.sh" || true
-"$SCRIPT_DIR/sops.sh" || true
 "$SCRIPT_DIR/uv.sh" || true
 "$SCRIPT_DIR/ruff.sh" || true
 "$SCRIPT_DIR/bun.sh" || true
