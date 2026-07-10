@@ -4,7 +4,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
 MISSING=()
-REQUIRED=(git curl wget jq ripgrep fzf tmux neovim)
+REQUIRED=(git curl wget jq rg fzf tmux nvim)
 for cmd in "${REQUIRED[@]}"; do
   if ! command_exists "$cmd"; then
     MISSING+=("$cmd")
