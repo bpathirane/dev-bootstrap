@@ -2,8 +2,8 @@
 set -e
 source "$(dirname "$0")/lib.sh"
 
-if command_exists bun; then
-  echo "bun $(bun --version) already installed"
+if command_exists bun || [ -x "$HOME/.bun/bin/bun" ]; then
+  echo "bun already installed"
   exit 0
 fi
 
