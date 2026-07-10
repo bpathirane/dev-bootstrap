@@ -16,12 +16,18 @@ curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
 
 UBUNTU_VERSION="$(lsb_release -rs)"
 
-# Fall back to 24.04 packages if Microsoft hasn't published for this distro yet
+# Known Ubuntu versions with Microsoft package support
+MSFT_SUPPORTED_VERSIONS=("20.04" "22.04" "24.04")
 MSFT_UBUNTU_VERSION="$UBUNTU_VERSION"
-if ! curl -fsSL --head "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" \
-    | grep -q "^HTTP/.*200"; then
-  echo "NOTE: No Microsoft packages for Ubuntu ${UBUNTU_VERSION}, falling back to 24.04"
+
+supported=false
+for v in "${MSFT_SUPPORTED_VERSIONS[@]}"; do
+  [ "$UBUNTU_VERSION" = "$v" ] && supported=true && break
+done
+
+if [ "$supported" = false ]; then
   MSFT_UBUNTU_VERSION="24.04"
+  echo "NOTE: Ubuntu ${UBUNTU_VERSION} not yet supported by Microsoft packages, using ${MSFT_UBUNTU_VERSION}"
 fi
 
 # Always rewrite the source list so it reflects the correct (possibly fallback) version
