@@ -11,19 +11,30 @@ REPO_URL="https://github.com/bpathirane/dev-bootstrap.git"
 REPO_DIR="$HOME/source/github_personal/dev-bootstrap"
 
 # ── Extras registry ────────────────────────────────────────────────────────
+# Each entry: EXTRAS[name]="script.sh|description"
 declare -A EXTRAS=(
-  [dotfiles]="install-dotfiles.sh"
-  [identity]="install-identity.sh"
-  [nts]="nts.sh"
-  [ai]="install-ai.sh"
-  [mssql]="mssql-tools.sh"
-  [postgres-client]="postgres-client.sh"
+  [dotfiles]="install-dotfiles.sh|Apply chezmoi dotfiles from your GitHub dotfiles repo"
+  [identity]="install-identity.sh|Generate SSH and GPG keys for git and server access"
+  [nts]="nts.sh|Set up chrony with NTS (authenticated time sync via time.cloudflare.com)"
+  [ai]="install-ai.sh|Install Claude CLI and AI tools"
+  [mssql]="mssql-tools.sh|Install mssql-tools18 (sqlcmd/bcp) from packages.microsoft.com — accepts EULA"
+  [postgres-client]="postgres-client.sh|Install psql from the official PGDG apt repo (set PG_VERSION=16 to pin a version)"
 )
 
+_extra_script() { echo "${EXTRAS[$1]%%|*}"; }
+_extra_desc()   { echo "${EXTRAS[$1]#*|}"; }
+
 _extras_list() {
+  local name desc
+  printf "\n%-20s %s\n" "EXTRA" "DESCRIPTION"
+  printf "%-20s %s\n"   "-----" "-----------"
   for name in $(echo "${!EXTRAS[@]}" | tr ' ' '\n' | sort); do
-    echo "  $name"
+    desc="$(_extra_desc "$name")"
+    printf "%-20s %s\n" "$name" "$desc"
   done
+  echo ""
+  echo "Usage:  bootstrap extras <name>"
+  echo "        PG_VERSION=16 bootstrap extras postgres-client"
 }
 
 # ── Argument parsing ───────────────────────────────────────────────────────
@@ -46,7 +57,6 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --list)
-      echo "Available extras:"
       _extras_list
       exit 0
       ;;
@@ -229,13 +239,11 @@ case "$SUBCOMMAND" in
 
   extras)
     if [ -z "$EXTRA" ]; then
-      echo "Usage: bootstrap extras <name>" >&2
-      echo "Available extras:"
       _extras_list
-      exit 2
+      exit 0
     fi
     if [ "${EXTRAS[$EXTRA]+_}" ]; then
-      script="$REPO_DIR/linux/${EXTRAS[$EXTRA]}"
+      script="$REPO_DIR/linux/$(_extra_script "$EXTRA")"
       run_with_log "extras-${EXTRA}" "$script"
       exit_code=$?
       if [ $exit_code -eq 0 ]; then
@@ -245,7 +253,6 @@ case "$SUBCOMMAND" in
       exit $exit_code
     else
       echo "Unknown extra: $EXTRA" >&2
-      echo "Available extras:"
       _extras_list
       exit 2
     fi
