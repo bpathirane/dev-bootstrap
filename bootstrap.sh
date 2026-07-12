@@ -82,7 +82,7 @@ declare -A EXTRAS=(
   [ai]="install-ai.sh|Install Claude CLI and AI tools"
   [docker]="docker.sh|Install Docker Engine, Compose v2, and add current user to docker group"
   [mssql]="mssql-tools.sh|Install mssql-tools18 (sqlcmd/bcp) from packages.microsoft.com — accepts EULA"
-  [postgres - client]="postgres-client.sh|Install psql from the official PGDG apt repo (set PG_VERSION=16 to pin a version)"
+  [postgres-client]="postgres-client.sh|Install psql from the official PGDG apt repo (set PG_VERSION=16 to pin a version)"
 )
 
 _extra_script() { echo "${EXTRAS[$1]%%|*}"; }
