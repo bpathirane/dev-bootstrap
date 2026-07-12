@@ -10,6 +10,33 @@ set -euo pipefail
 REPO_URL="https://github.com/bpathirane/dev-bootstrap.git"
 REPO_DIR="$HOME/source/github_personal/dev-bootstrap"
 
+# ── macOS early gate (must run before declare -A; macOS ships bash 3.2) ───
+if [ "$(uname -s)" = "Darwin" ]; then
+  _mac_subcmd="install"; _mac_profile=""
+  for _a in "$@"; do
+    case "$_a" in
+      install|validate) _mac_subcmd="$_a" ;;
+      --profile=*)      _mac_profile="${_a#*=}" ;;
+    esac
+  done
+  # Consume "--profile <val>" two-token form
+  _next=""
+  for _a in "$@"; do
+    if [ "$_next" = "profile" ]; then _mac_profile="$_a"; _next=""; continue; fi
+    [ "$_a" = "--profile" ] && _next="profile"
+  done
+  if [ "$_mac_profile" = "thin-client" ]; then
+    case "$_mac_subcmd" in
+      install)  exec "$REPO_DIR/macos/install-thin-client.sh" ;;
+      validate) exec "$REPO_DIR/macos/validate-thin-client.sh" ;;
+      *)        echo "macOS thin-client only supports 'install' and 'validate'." >&2; exit 2 ;;
+    esac
+  fi
+  echo "macOS support is not yet implemented for full Linux bootstrap." >&2
+  echo "Use the thin-client profile or Homebrew on macOS instead." >&2
+  exit 1
+fi
+
 # ── Extras registry ────────────────────────────────────────────────────────
 # Each entry: EXTRAS[name]="script.sh|description"
 declare -A EXTRAS=(
@@ -105,14 +132,9 @@ done
 # ── OS gate ────────────────────────────────────────────────────────────────
 OS="$(uname -s)"
 
-if [ "$OS" = "Darwin" ]; then
-  if [ "${PROFILE:-}" = "thin-client" ] && [ -x "$REPO_DIR/macos/install-thin-client.sh" ]; then
-    exec "$REPO_DIR/macos/install-thin-client.sh"
-  fi
-  echo "macOS support is not yet implemented for full Linux bootstrap." >&2
-  echo "Use the thin-client profile or Homebrew on macOS instead." >&2
-  exit 1
-elif [ "$OS" != "Linux" ]; then
+# Darwin is fully handled by the early gate above; anything reaching here is
+# either Linux or an unsupported OS.
+if [ "$OS" != "Linux" ]; then
   echo "Unsupported OS: $OS" >&2
   exit 1
 fi
