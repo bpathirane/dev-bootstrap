@@ -32,7 +32,7 @@ $MARKER
 server $NTS_SERVER iburst nts
 # Fall back to unsigned pool if NTS server is unreachable
 pool ntp.ubuntu.com iburst maxsources 4
-makestep 1.0 3
+makestep 1.0 -1
 rtcsync
 EOF
 fi
@@ -46,4 +46,4 @@ echo "Time sync status:"
 chronyc tracking | grep -E "Reference|System time|Stratum|NTP"
 
 echo "NTS associations:"
-chronyc authdata 2>/dev/null || echo "(authdata not available — may need chrony >= 4.0)"
+sudo chronyc authdata 2>/dev/null || echo "(authdata not available — may need chrony >= 4.0)"
