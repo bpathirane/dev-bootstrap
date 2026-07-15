@@ -23,6 +23,15 @@ else
   echo "All required VM tools are present."
 fi
 
+# ── Timezone check ─────────────────────────────────────────────────────────
+tz="$(timedatectl show --property=Timezone --value 2>/dev/null || true)"
+if [ "$tz" != "America/New_York" ]; then
+  echo "Wrong timezone: ${tz:-unknown} (expected America/New_York). Run ./linux/nts.sh to fix." >&2
+  exit 1
+else
+  echo "Timezone OK ($tz)"
+fi
+
 # ── Time sync check ────────────────────────────────────────────────────────
 MAX_DRIFT_SECONDS=5
 TIME_OK=true
