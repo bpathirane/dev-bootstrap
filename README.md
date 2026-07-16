@@ -89,6 +89,7 @@ bootstrap extras dotfiles   # apply chezmoi dotfiles
 bootstrap extras identity   # SSH/GPG keys
 bootstrap extras nts        # chrony + NTS time sync
 bootstrap extras ai         # Claude CLI and AI tools
+bootstrap extras mtu-fix    # clamp default route MTU (fixes Path MTU black holes, e.g. Multipass/UTM VMs)
 bootstrap extras --list     # show all available extras
 ```
 
