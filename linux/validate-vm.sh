@@ -8,7 +8,7 @@ REQUIRED=(
   # apt base packages
   git curl wget jq
   # brew tools
-  nvim tmux lazygit ya fzf fd rg gh kubectl helm k9s zoxide starship just uv tldr sops fnm node
+  nvim tmux lazygit ya fzf fd rg gh az aws kubectl helm k9s zoxide starship just uv tldr sops fnm node
 )
 for cmd in "${REQUIRED[@]}"; do
   if ! command_exists "$cmd"; then
