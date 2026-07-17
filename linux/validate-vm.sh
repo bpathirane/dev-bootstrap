@@ -2,18 +2,15 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+source "$SCRIPT_DIR/profile-vm.sh"
 
 MISSING=()
-REQUIRED=(
-  # apt base packages
-  git curl wget jq
-  # brew tools
-  nvim tmux lazygit ya fzf fd rg gh az aws kubectl helm k9s zoxide starship just uv tldr sops fnm node
-)
-for cmd in "${REQUIRED[@]}"; do
-  if ! command_exists "$cmd"; then
-    MISSING+=("$cmd")
-  fi
+for cmd in "${VM_BASE_CMDS[@]}"; do
+  command_exists "$cmd" || MISSING+=("$cmd")
+done
+for entry in "${VM_BREW_TOOLS[@]}"; do
+  cmd="${entry##*:}"
+  command_exists "$cmd" || MISSING+=("$cmd")
 done
 
 if [ ${#MISSING[@]} -gt 0 ]; then

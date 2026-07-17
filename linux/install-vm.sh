@@ -2,6 +2,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
+source "$SCRIPT_DIR/profile-vm.sh"
 
 echo "Starting VM profile install..."
 
@@ -19,10 +20,10 @@ done
 # Prefer Homebrew for fast-moving dev tools.
 "$SCRIPT_DIR/install-brew.sh" || true
 
-BREW_TOOLS=(neovim tmux lazygit yazi fzf fd ripgrep gh azure-cli awscli kubectl helm k9s zoxide starship just uv tldr sops fnm node)
-for tool in "${BREW_TOOLS[@]}"; do
+for entry in "${VM_BREW_TOOLS[@]}"; do
+  formula="${entry%%:*}"
   if command_exists brew; then
-    brew_install_if_missing "$tool" || true
+    brew_install_if_missing "$formula" || true
   fi
 done
 
