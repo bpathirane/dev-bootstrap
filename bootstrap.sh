@@ -68,8 +68,19 @@ if [ "$(uname -s)" = "Darwin" ]; then
       ;;
     esac
   fi
-  echo "macOS support is not yet implemented for full Linux bootstrap." >&2
-  echo "Use the thin-client profile or Homebrew on macOS instead." >&2
+  if [ -z "$_mac_profile" ] || [ "$_mac_profile" = "full" ]; then
+    _repo_pull
+    case "$_mac_subcmd" in
+    install) exec "$REPO_DIR/macos/install-full.sh" ;;
+    validate) exec "$REPO_DIR/macos/validate-full.sh" ;;
+    *)
+      echo "macOS full profile only supports 'install' and 'validate'." >&2
+      exit 2
+      ;;
+    esac
+  fi
+  echo "Unknown macOS profile: $_mac_profile" >&2
+  echo "Available macOS profiles: full (native dev environment, default), thin-client (minimal host tools for a remote devbox)" >&2
   exit 1
 fi
 
