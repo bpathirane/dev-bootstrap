@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Does
 
-Provisions a full developer environment on Ubuntu VMs, WSL2, Linux desktops, macOS thin clients, and bare metal Linux. A single entry point detects the platform and routes to the appropriate profile installer.
+Provisions a full developer environment on Ubuntu VMs, WSL2, Linux desktops, macOS (full native or thin client), and bare metal Linux. A single entry point detects the platform and routes to the appropriate profile installer.
 
 ## Running and Testing
 
@@ -60,6 +60,15 @@ The verbose validate script (`linux/validate.sh`) has `--fix` and `--interactive
 3. Sources `linux/lib-state.sh` for state management
 4. Dispatches to `linux/install-<profile>.sh` or `linux/validate-<profile>.sh` based on subcommand and profile
 
+**macOS is handled by a separate early gate**, before argument parsing and before the
+`declare -A EXTRAS` line, because macOS ships bash 3.2 (no associative arrays) and the
+rest of the script assumes bash 4+. The gate does its own lightweight arg parsing for
+`--profile`/`--profile=` and `install|validate`, then `exec`s straight into
+`macos/install-<profile>.sh` or `macos/validate-<profile>.sh`. It never reaches the
+extras/state machinery below — macOS profiles are self-contained scripts, not wired
+into `EXTRAS` or `~/.bootstrap/settings.json`. Any code added above the `EXTRAS`
+declaration must stay 3.2-compatible (no associative arrays, no `${var,,}`, etc.).
+
 ### Shared libraries
 
 - **`linux/lib.sh`** — low-level helpers sourced by all `linux/` scripts: `command_exists`, `is_wsl`, `get_arch`, `apt_install_if_missing`, `brew_install_if_missing`, `apt_update_if_stale`
@@ -72,6 +81,7 @@ Each profile is self-contained:
 - `linux/install-wsl.sh` — runs `wsl-config.sh`, `install-packages.sh`, `win32yank.sh`, then the same runtime scripts
 - `linux/install-desktop.sh`, `install-minimal.sh`, `install-thin-client.sh` — profile variants
 - `macos/install-thin-client.sh` — macOS thin-client via Homebrew + `macos/Brewfile.thin-client`
+- `macos/install-full.sh` — full native macOS dev environment via Homebrew (array-based, mirrors `linux/install.sh` style rather than a Brewfile); sources `macos/lib.sh`, not `linux/lib.sh`
 
 ### Tool scripts
 
@@ -98,6 +108,7 @@ Version is always `git describe --tags --always` — no manual VERSION file to b
 - `linux/validate-vm.sh` — checks required tools, optional tools, and time sync (chrony drift or timedatectl NTPSynchronized)
 - `linux/validate.sh` — comprehensive validator with fix/interactive modes; checks tool versions, Neovim install source, Kubernetes tools, shell, WSL integration, and git/SSH authentication
 - `linux/validate-wsl.sh`, `linux/validate-thin-client.sh` — profile-specific subsets
+- `macos/validate-full.sh`, `macos/validate-thin-client.sh` — macOS equivalents; `validate-full.sh` is written in bash-3.2-compatible syntax (a `case`-based `bin_for_package` function instead of an associative array) since it may run under the stock system bash
 
 ## Key Conventions
 

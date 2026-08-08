@@ -1,6 +1,6 @@
 # dev-bootstrap
 
-Reproducible developer environment bootstrap for Ubuntu VMs, WSL, Linux desktops, and thin clients.
+Reproducible developer environment bootstrap for Ubuntu VMs, WSL, Linux desktops, and macOS.
 
 ## Profiles
 
@@ -9,6 +9,7 @@ Reproducible developer environment bootstrap for Ubuntu VMs, WSL, Linux desktops
 | `vm` | Ubuntu VM / bare metal | Full developer workstation (headless) |
 | `wsl` | Windows WSL2 | Developer workstation inside WSL |
 | `desktop` | Linux GUI | Full workstation with desktop apps |
+| `full` | macOS | Full native developer workstation (default on macOS) |
 | `thin-client` | macOS / Linux | Minimal host tools for remote devbox access |
 | `minimal` | Any Linux | Base dependencies only |
 
@@ -42,13 +43,18 @@ cd ~/source/github_personal/dev-bootstrap
 
 Without `--profile`, the script auto-detects WSL vs plain Linux and picks `wsl` or `vm` accordingly. The `install` subcommand is the default and can be omitted.
 
-### macOS (thin client)
+### macOS
 
 ```bash
-./bootstrap.sh install --profile thin-client
+./bootstrap.sh install --profile full          # full native dev environment (default)
+./bootstrap.sh install --profile thin-client   # minimal host tools for a remote devbox
 ```
 
-Installs WezTerm, VS Code, chezmoi, git, gh, and SSH — lightweight host tools for connecting to a remote devbox. Does not install runtimes, Docker, or Kubernetes.
+`full` installs neovim, node, Docker (OrbStack), Kubernetes tooling, and the rest of a
+native dev setup — see [macOS Full](docs/macos-full.md). `thin-client` installs just
+WezTerm, VS Code, chezmoi, git, gh, and SSH for connecting to a remote devbox; it skips
+runtimes, Docker, and Kubernetes. Use `thin-client` on a machine that's mainly a
+front-end to a beefier VM, and `full` when the Mac itself is doing the development.
 
 ### Windows (new WSL instance)
 
@@ -65,6 +71,7 @@ Creates a WSL instance named `Ubuntu-Dev` and runs the `wsl` profile inside it. 
 All Linux profiles share a common base (zsh, starship, fzf, lazygit, yazi, zoxide, LazyVim, GitHub CLI, SSH, chezmoi). Profile-specific additions:
 
 - **vm / wsl / desktop**: AWS CLI, Azure CLI, kubectl/k9s, .NET SDK, Bun, uv, Claude CLI, Zellij, WezTerm (desktop/WSL only)
+- **full (macOS)**: neovim/LazyVim, node, Docker (OrbStack), kubectl/helm/k9s/kind, Azure/AWS CLI, sqlcmd, Claude CLI, chezmoi — see [macOS Full](docs/macos-full.md)
 - **thin-client**: Homebrew, WezTerm, VS Code, chezmoi, git, gh, ssh
 - **minimal**: Core apt packages and shell only
 
@@ -77,6 +84,7 @@ After setup, verify the installation:
 ```bash
 bootstrap validate --profile vm
 bootstrap validate --profile wsl
+bootstrap validate --profile full
 bootstrap validate --profile thin-client
 ```
 
@@ -121,6 +129,7 @@ Logs for every run are stored in `~/.bootstrap/logs/`.
 ## Profile Docs
 
 - [Ubuntu VM](docs/ubuntu-vm.md)
+- [macOS Full](docs/macos-full.md)
 - [Thin Client](docs/thin-client.md)
 
 ---
