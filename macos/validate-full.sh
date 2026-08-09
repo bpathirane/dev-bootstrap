@@ -10,6 +10,7 @@ bin_for_package() {
     neovim) echo "nvim" ;;
     azure-cli) echo "az" ;;
     gnupg) echo "gpg" ;;
+    awscli) echo "aws" ;;
     *) echo "$1" ;;
   esac
 }
